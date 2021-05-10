@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>myPage</title>
+<link rel="stylesheet" href="/css/bootstrap.css" th:href="@{/css/bootstrap.css}">
+<link rel="stylesheet" type="text/css" href="/css/paging.css" />
+<!-- 모든 페이지 공통 로고바,네비게이션,푸터, 구글폰트 css -->
+<link rel="stylesheet" th:href="@{/css/default.css}"/>
+<!-- 구글폰트 -->
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500&display=swap" rel="stylesheet">
+<!-- font awesome 4의 icon 사용하기 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<script src="/js/jquery-3.5.1.js" th:src="@{/js/jquery-3.5.1.js}"></script>
+<script src="/js/popper.js" th:src="@{/js/popper.js}"></script>
+<script src="/js/bootstrap.js" th:src="@{/js/bootstrap.js}"></script>
+</head>
+<body>
+	<!-- 네비게이션 영역 -->
+	<div id="defaultNav" class="sticky-top"></div>
+	
+    <div class="container py-5">
+        <div class="d-flex justify-content-center mb-4">
+            <header class="d-flex mb-3 align-items-center">
+                <i class="fa fa-user-circle-o fa-3x mr-1" aria-hidden="true"></i>
+                <h3>My Page</h3>
+            </header>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <table class="table table-hover text-center" th:with="num=${totalCnt - ((cri.page-1) * 5)}">
+                    <colgroup>
+                        <col width="15%" />
+                        <col width="20%" />
+                        <col width="*%" />
+                        <col width="10%" />
+                        <col width="15%" />
+                        <col width="15%" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>번호</th>
+                            <th>주문일자</th>
+                            <th>상품명</th>
+                            <th>상품개수</th>
+                            <th>주문가격</th>
+                            <th>후기작성</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.size(mypageInfoList)} > 0" th:each="list, i : ${mypageInfoList}" class="border-bottom">
+                            <td th:text="${num - i.index}" class="align-middle"></td>
+                            <td th:text="${list.orderDate}" class="align-middle"></td>
+                            <td class="align-middle"><a href="/zero/productDetail/" th:attrappend="href=${list.productPk}" class="text-dark font-weight-bold"><span th:text="${list.productName}"></span></a></td>
+                            <td th:text="${list.orderCnt}" class="align-middle"></td>
+                            <td th:text="${list.totalPrice}+원" class="align-middle"></td>
+                            <td th:if="${list.reviewYn} == 0" class="align-middle">
+                                <button class="btn btn-success" type="button" th:onclick="|reviewClick(${list.orderDetailPk},${list.productPk})|" data-toggle="modal" data-target="#review">리뷰작성</button>
+                            </td>
+                            <td th:unless="${list.reviewYn} == 0" class="align-middle">
+                           		 <button class="btn btn-dark" type="button" disabled>리뷰작성</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!--페이징-->
+			<div th:if="${#lists.size(mypageInfoList)} > 0" class="paging_area">
+				<div class="paging">
+					<a th:if="${pageMaker.prev}" href="/zero/getMyPageList?page=1" class="first">첫 페이지</a>
+					<a th:if="${pageMaker.cri.page != 1}" th:href="@{/zero/getMyPageList(page=${pageMaker.cri.page-1})}" class="prev">이전 페이지</a>
+					
+					<th:block th:each="i : ${#numbers.sequence(pageMaker.startPage,pageMaker.endPage)}">
+						<a th:href="@{/zero/getMyPageList(page=${i})}" class="num" th:classappend="${pageMaker.cri.page == i} ? active" th:text="${i}"></a>
+					</th:block>
+					
+					<a th:if="${pageMaker.cri.page != pageMaker.lastPage}" th:href="@{/zero/getMyPageList(page=${pageMaker.cri.page+1})}" class="next">다음 페이지</a>
+					<a th:if="${pageMaker.next}" th:href="@{/zero/getMyPageList(page=${pageMaker.lastPage})}" class="last">마지막 페이지</a>
+				</div>
+			</div>
+			
+				<!--//페이징-->
+    </div>
+    
+    <!-- Modal -->
+          <div class="modal fade" id="review">
+              <div class="modal-dialog modal-lg modal-dialog-centered">
+                <form id="reviewModalFrm">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                          <div class="modal-title">리뷰작성</div>
+                          <input type="hidden" id="orderPk" name="orderDetailPk">
+                          <input type="hidden" id="productPk" name="productPk">
+                          <!-- <input type="hidden" th:value="customerPk"> -->
+                          <!-- <input type="hidden" th:value="${list.orderDetailPk}"> -->
+                          <button class="close" type="button" data-dismiss="modal">&times;</button>
+                      </div>
+                      <div class="modal-body">
+                          <textarea name="productReviewContents" id="productReviewContents" cols="30" rows="8" class="form-control mb-2 rounded-0" placeholder="내용"></textarea>
+                          <div class="d-flex">
+                              <div class="flex-fill p-1">
+                                  <input type="file" id="files" name="files" class="form-control form-control-file border-0" placeholder="파일을 추가해주세요">    
+                              </div>
+                              <div class="flex-fill mt-1">
+                                  <select class="form-control border-0" id="productReviewScore" name="productReviewScore">
+                                      <option style="color:black; display: none;" value="0">별점주기</option>
+                                      <option style="color:black;" value="5">★★★★★</option>
+                                      <option style="color:black;" value="4">★★★★☆</option>
+                                      <option style="color:black;" value="3">★★★☆☆</option>
+                                      <option style="color:black;" value="2">★★☆☆☆</option>
+                                      <option style="color:black;" value="1">★☆☆☆☆</option>
+                                  </select>
+                              </div>
+                              <div class="flex-fill p-1">
+                                  <button type="button" id="reviewSaveBtn" class="btn btn-secondary rounded-0 w-100">저장하기</button>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="modal-footer p-1">
+                          <button class="btn btn-secondary" type="button" data-dismiss="modal">닫기</button>
+                      </div>
+                      
+                  </div>    
+                  </form>
+              </div>
+          </div>
+     <!-- // Modal -->
+    
+    <!-- footer 영역 -->
+    <footer class="py-5 mt-5"></footer>
+    
+    <script type="text/javascript">
+	$(document).ready(function(){
+		$('#defaultNav').load('navbar');
+		$('footer').load('footer');
+		$('#reviewSaveBtn').on("click", function () {
+			/* 유효성 작업 -> */ 
+			if($('#productReviewContents').val() == '' || $('#productReviewContents').val() == undefined){
+				alert('내용을 입력 해주세요');
+				return;
+			}
+			else if($('#productReviewScore').val() == 0 || $('#productReviewScore').val() == undefined){
+				alert("별점을 등록 해주세요");
+				return;
+			
+			}
+			else if($('#files').val() == '' || $('#files').val() == undefined){
+				alert('사진을 등록 해주세요');
+				return;
+			}
+			if(confirm('리뷰를 등록하시겠습니까?')){
+				const form = $('#reviewModalFrm')[0];
+				const formData = new FormData(form);
+				
+				$.ajax ({
+					url: "/zero/saveProductReview",
+					type: "POST",
+					enctype: 'multipart/form-data',
+					contentType : false,
+					processData : false,
+					data: formData,
+					success: function(data) {
+						console.log('data ::'+data);
+						if(data == "1"){
+							alert("리뷰 등록을 완료하였습니다.");
+							location.reload();
+							
+						}else{
+							alert("리뷰등록을 실패하였습니다 다시 등록해주세요.");
+						}
+					},
+					error: function() {
+						alert("ajax 통신에 오류가 발생하였습니다.");
+					}
+				});	
+			}
+		})
+		
+	});
+	
+	function reviewClick(orderPk , productPk){
+		document.querySelector('#orderPk').value = orderPk;
+		document.querySelector('#productPk').value = productPk;
+		modalClear();
+	}
+	
+	function modalClear(){
+		document.querySelector('#productReviewContents').value  = '';
+		document.querySelector('#productReviewScore').value  = 0;
+		document.querySelector('#files').value = ''; 
+	}
+</script>
+</body>
+</html>
