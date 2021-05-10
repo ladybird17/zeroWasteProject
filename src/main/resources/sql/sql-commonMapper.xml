@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="commonMapper">
+	
+	<!-- (공용) navbar에 상품 카테고리 가져오기 -->
+	<select id="selectProductCategoryList" resultType="com.bitc.zero.dto.CategoryDto">
+		<![CDATA[
+			SELECT
+				product_category_pk, product_category_name
+			FROM
+				product_category
+		]]>
+	</select>
+	
+	<!-- (공용) 세션에 로그인된 이메일 이용하여 고객 정보 불러오기 -->
+	<select id="selectCustomerInfo" parameterType="String" resultType="com.bitc.zero.dto.JoinDto">
+		<![CDATA[
+			SELECT
+				customer_pk, customer_name, customer_phone, customer_addr, admin_yn
+			FROM
+				customers
+			WHERE
+				customer_email = #{customerEmail}
+		]]>
+	</select>
+	
+	<!-- (공용) 특정 글 파일 목록 -->
+	<select id="zeroFileList" parameterType="int" resultType="com.bitc.zero.dto.TFileDto">
+		<![CDATA[
+			SELECT
+				idx, board_idx, original_file_name, stored_file_path,
+				FORMAT(ROUND(file_size / 1024), 0) AS file_size
+			FROM
+				t_file
+			WHERE
+				board_idx = #{boardIdx}
+			AND
+				deleted_yn = 'N'
+		]]>
+	</select>
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

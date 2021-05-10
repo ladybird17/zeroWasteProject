@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="myPageMapper">
+	
+	<select id="selectCustomerInfo" resultType="int">
+	<!--myPageMapper.selectCustomerInfoList-->
+		SELECT customer_pk
+		FROM customers
+		WHERE customer_email = #{customerEmail}
+	</select>
+	
+	<select id="selectAllCnt" parameterType="int" resultType="int">
+		/* myPageMapper.selectAllCnt */
+		
+		SELECT  COUNT(*)
+		FROM 	orders_detail od
+        JOIN 	orders o
+        ON 		od.order_pk = o.order_pk        
+        JOIN	product p
+        ON 		p.product_pk = od.product_pk
+        WHERE 	o.customer_pk= #{customerPk}
+        ORDER BY order_date DESC
+	</select>
+	
+	<!--mypageList-->
+    <select id="getMypageInfoList" parameterType="com.bitc.zero.dto.MyPageDto" resultType="com.bitc.zero.dto.MyPageDto">
+    	/* myPageMapper.getMypageInfoList */
+    	
+        SELECT 
+        		@num := @num+1 AS num	,
+        		od.order_detail_pk		, 
+        		p.product_pk			, 
+        		o.order_date			, 
+        		p.product_name			, 
+        		p.product_price			, 
+        		od.order_cnt			,
+        		od.review_yn			,
+        		(p.product_price * od.order_cnt) as total_price 
+        FROM 	(select @num:=0) a, orders_detail od
+        JOIN 	orders o
+        ON 		od.order_pk = o.order_pk        
+        JOIN	product p
+        ON 		p.product_pk = od.product_pk
+        WHERE 	o.customer_pk=#{customerPk}
+        ORDER BY order_date DESC
+        <if test = 'cri.perPageNum != -1'>
+			LIMIT #{cri.pageStart}, #{cri.perPageNum}
+		</if>
+        
+            
+    </select>
+	
+	<select id="productReview" resultType="com.bitc.zero.dto.ReviewDto">
+		<![CDATA[ 
+			SELECT 
+				c.customer_name, pr.product_review_contents, pr.product_review_score
+			FROM 
+				product_review pr
+			JOIN 
+				customers c
+			ON 
+				pr.customer_pk = c.customer_pk; 
+		]]>
+	</select>
+	
+	<insert id="insertProductReview" parameterType="com.bitc.zero.dto.ReviewDto">
+		<!-- myPageMapper.insertProductReview -->
+		<![CDATA[ 
+			INSERT INTO 
+				product_review (
+								product_review_pk		,
+								order_detail_pk			,
+								product_pk				, 
+								customer_pk				, 
+								product_review_contents	, 
+								product_review_score	
+								)
+			VALUE
+								(
+								#{productReviewPk}		,
+								#{orderDetailPk}		,
+								#{productPk}			,
+								#{customerPk}			, 
+								#{productReviewContents}, 
+								#{productReviewScore}	
+								)
+			]]>
+			
+	</insert>
+	
+	<update id="updateReviewYn" parameterType="int">
+	<!-- myPageMapper.updateReviewYn -->
+		UPDATE 	orders_detail 
+		SET 	review_yn = 1 
+		WHERE order_detail_pk = #{orderDetailPk}
+	</update>
+	
+	<insert id="postProductReviewImg" parameterType="com.bitc.zero.dto.TFileDto">
+		<![CDATA[
+			INSERT INTO t_file
+				(board_idx, original_file_name, stored_file_path, 
+				file_size, create_id, create_datetime)
+			VALUES
+		]]> 
+		
+		<foreach collection="list" item="file" separator=",">
+			(
+				#{file.boardIdx},
+				#{file.originalFileName},
+				#{file.storedFilePath},
+				#{file.fileSize},
+				'test',
+				NOW()
+			)
+		</foreach>
+	</insert>
+	
+	<select id="seletLastProductReviewPk" resultType="Integer">
+		/* myPageMapper.seletLastProductReviewPk */
+		
+		SELECT 	IFNULL(
+               	(
+              		SELECT 	MAX(product_review_pk) + 1
+			  		FROM 	product_review
+			  		LIMIT 1
+              	), 1  ) AS result
+		FROM 	product_review
+		UNION 	ALL
+		SELECT 	1 AS result
+		FROM DUAL
+		LIMIT 1
+		
+	</select>
+	
+	<insert id="insertReviewFile" parameterType="com.bitc.zero.dto.TFileDto">
+		<![CDATA[
+			INSERT INTO t_file
+				(board_idx,product_review_pk, original_file_name, stored_file_path, 
+				file_size, create_id, create_datetime)
+			VALUES
+		]]> 
+		
+		<foreach collection="list" item="file" separator=",">
+			(
+				0,
+				#{file.productReviewPk},
+				#{file.originalFileName},
+				#{file.storedFilePath},
+				#{file.fileSize},
+				#{file.createId},
+				NOW()
+			)
+		</foreach>
+	</insert>
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
